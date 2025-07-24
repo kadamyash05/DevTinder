@@ -1,23 +1,45 @@
 const express = require("express");
-
+require("./config/database");
 const app = express();
+const connectDB = require("./config/database");
+const cookieParser = require("cookie-parser");
+const cors = require("cors");
+const http = require("http");
+const initializeSocket = require("./utils/socket");
 
-app.get("/",(req, res) => {
-  res.send("Hello from server");
-});
+app.use(
+  cors({
+    origin: "http://localhost:5173",
+    credentials: true,
+  })
+);
+app.use(express.json());
+app.use(cookieParser());
 
-app.use("/test",(req, res) => {
-    res.send("Hello from test routes");
+const authRouter = require("./routes/auth");
+const profileRouter = require("./routes/profile");
+const requestRouter = require("./routes/request");
+const userRouter = require("./routes/user");
+const chatRouter = require("./routes/chat");
+
+
+app.use("/", authRouter);
+app.use("/", profileRouter);
+app.use("/", requestRouter);
+app.use("/", userRouter);
+app.use("/", chatRouter);
+
+
+const server = http.createServer(app);
+initializeSocket(server)
+
+connectDB()
+  .then(() => {
+    console.log("Database connection established");
+    server.listen(3004, () => {
+      console.log("server sucessfully listening on port 3004");
+    });
+  })
+  .catch((err) => {
+    console.error(err);
   });
-
-  app.use("/test1",(req, res) => {
-    res.send("Hello from test routes 1");
-  });
-
-  app.use("/test2",(req, res) => {
-    res.send("Hello from test routes 2");
-  });
-
-app.listen(3004, () => {
-  console.log("server sucessfully listening on port 3004");
-});
